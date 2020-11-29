@@ -1,0 +1,95 @@
+@startuml
+
+title Replicated Concurrency Control and Recovery
+
+
+class TransactionManager {
+  -HashMap transactions
+  -HashMap sites
+  -HashMap waitsFor
+  +void startTransaction(Transaction t)
+  +void endTransaction(Transaction t, String token)
+  +void readOnly(Transaction t, String dataID)
+  +void read(Transaction t, String  dataID)
+  +void write(Transaction t, String dataID, Data value)
+  +void waitForMethod(transaction, waitForTrans)
+  +void handleDeadlocks()
+  +void detectDeadlock(currTransId, currentlyVisiting, visited, deadlocks)
+  +void getTransactionsInCycleHelper(currTransId, destTransId, visited, currPath, res)
+  +void getTransactionsInCycle(parentTransId, childTransId)
+  +void resolveDeadlocks(deadlocks)
+}
+
+class Site {
+  -Int failTimes
+  -Enum state
+  -String siteId
+  -HashMap lockTable
+  -HashMap data
+  -HashMap oldCommitedCopies 
+  +Set checkLock(Enum lockType, String transactionID, String dataId)
+  +Set checkLock(Enum lockType, String transactionID, String dataId)
+  +Void update(String transactionID, String dataId, Int newValue)
+  +Void commit(String transactionID, String dataId)
+  +Void releaseLocks(String transactionID, String lockedDataIds)
+  +Bool checkReadOnly(String dataId, Timestamp transTimestemp)
+  +Data getDataReadOnly(String dataId, Timestamp transTimestemp)
+  +String checkDataExists(String dataId)
+  +Bool checkReadAllowed(String dataId, Bool isDataReplicated)
+  +Int getData(String dataId)
+  +Void fail()
+  +Void recover()
+}
+
+class Lock {
+  -Enum lockType
+  -Set transactions
+  -Data dataInMemory
+}
+
+enum LockType {
+    READ
+    WRITE
+    READ_ONLY
+}
+
+class Transaction {
+  -String State 
+  -String transactionID
+  -Timestamp timestamp
+  -Set lockedSites
+  -Bool isReadOnly
+  -List waitedBy
+}
+
+
+
+class Request {
+-Enum requestType
+-String param1
+-Int param2
+-Int param3
++List flatten()
+}
+
+Class Data {
+ -String dataId
+ -String name
+ -Int value
+ -Timestamp committed
+}
+
+class Database {
+    -TransactionManager TM
+    +Void listenAndHandleRequests(String file_path)
+    +Request getRequestFromLine(String line)
+}
+
+TransactionManager <|-- Transaction
+Database <|-- TransactionManager
+Data --|> Site
+TransactionManager <|- Site
+Request <|-- Database
+Lock --|> Site 
+LockType -|> Lock
+@enduml
